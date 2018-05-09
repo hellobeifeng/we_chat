@@ -7,12 +7,14 @@ var util = require('./util')
 /**
  * 用于微信验证公众号后台功能的中间件
  * @param {Object} opts 验证公众号所需的配置对象
+ * @param {Object} handler 回调函数
  */
-module.exports = function(opts) {
-    var wechat = new Wechat(opts) // 微信接口：获取到全局唯一的票据对象
+module.exports = function(opts, handler) {
+    var wechat = new Wechat(opts) // 微信接口：获取到全局唯一的票据对象（还注册了一个能够处理自动回复的接口）
     return function *(next) {
-        console.log(this.query)
         var that = this
+        
+        // ****  首先验证微信服务器请求
         var token = opts.token
         var signature = this.query.signature
         var nonce = this.query.nonce
@@ -25,15 +27,14 @@ module.exports = function(opts) {
         // GET 请求类型：微信验证程序的请求
         if(this.method === 'GET') {
             if (sha === signature) {
-                this.body = echostr + ''
+                this.body = echostr + '' // 验证成功，返回echostr
             } else {
-                this.body = 'wrong'
+                this.body = 'wrong'      // 验证失败，返回 wrong
             }
-        } else if (this.method === 'POST') { // 微信将用户数据返回给程序
+        } else if (this.method === 'POST') { // POST 请求类型：微信将用户数据返回给程序
             // 排除非微信的请求
             if (sha !== signature) {
-                this.body = 'wrong'
-
+                this.body = 'wrong'     // 验证失败，返回 wrong, 推出中间件，什么也不做
                 return false
             }
 
@@ -45,32 +46,13 @@ module.exports = function(opts) {
             })
 
             var content = yield util.parseXMLAsync(data) // 将xml转换成JSON对象
+            var message = util.formatMessage(content.xml) // 将上一步生成的JSON对象进行格式化
 
-            var message = util.formatMessage(content.xml)
-
-            console.log(message)
-
-            if (message.MsgType === 'event') {
-                if (message.Event === 'subscribe') {
-                    var now = new Date().getTime()
-                    console.log('before')
-                    that.status = 200
-                    that.type = 'application/xml'
-                    that.body = '<xml>' + 
-                    '<ToUserName><![CDATA[' + message.FromUserName + ']]></ToUserName>' + 
-                    '<FromUserName><![CDATA[' + message.ToUserName +']]></FromUserName>' + 
-                    '<CreateTime>'+ now +'</CreateTime>' + 
-                    '<MsgType><![CDATA[text]]></MsgType>' + 
-                    '<Content><![CDATA[欢迎关注]]></Content>' + 
-                    '</xml>'
-                    console.log('after')
-                    return
-                } else {
-                    console.log('not subscribe')
-                }
-            } else {
-                console.log('not event')
-            }
+            this.weixin = message // 将解析好的数据挂在到 this 上
+            console.log('## before weinxin hander')
+            yield handler.call(this, next)
+            console.log('## after weinxin hander')
+            wechat.replay.call(this) // 自动回复
         }
     }
 }

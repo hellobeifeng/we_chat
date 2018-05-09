@@ -1,8 +1,14 @@
 'use strict'
 
+// 微信业务模块的工具方法
 var xml2js = require('xml2js')
 var Promise = require('bluebird')
+var tpl = require('./tpl')
 
+/**
+ * 将XML格式的数据转换成json格式，返回Promise
+ * @param {String} xml 要解析的XML数据
+ */
 exports.parseXMLAsync = function(xml) {
     return new Promise(function(resolve, reject) {
         xml2js.parseString(xml, {trim: true}, function(err, content) {
@@ -12,9 +18,9 @@ exports.parseXMLAsync = function(xml) {
     })
 }
 
-/*
- * 实现对入参对象的格式化（深拷贝，过滤无效数据，有待优化）
- * 入参例子
+/**
+ *  实现对入参对象的格式化（深拷贝，过滤无效数据，有待优化）
+    入参例子
     { 
         ToUserName: [ 'gh_e313e6745768' ],
         FromUserName: [ 'oF92LxHsR-ml359b5yPGkHS1piIE' ],
@@ -23,7 +29,8 @@ exports.parseXMLAsync = function(xml) {
         Event: [ 'subscribe' ],
         EventKey: [ '' ] 
     }
-*/
+ * @param {Obejct} result 格式化好的对象 TODO 弄个例子出来
+ */
 function formatMessage(result) {
     var message = {}
 
@@ -59,5 +66,29 @@ function formatMessage(result) {
 
     return message
 }
+
+exports.tpl = function(content, message) {
+    var info = {}
+    var type = 'text'
+    var fromUserName = message.FromUserName
+    var toUserName = message.ToUserName
+  
+    if (Array.isArray(content)) {
+      type = 'news'
+    }
+  
+    if (!content) {
+      content = 'Empty news'
+    }
+  
+    type = content.type || type
+    info.content = content
+    info.createTime = new Date().getTime()
+    info.msgType = type
+    info.toUserName = fromUserName
+    info.fromUserName = toUserName
+  
+    return tpl.compiled(info)
+  }
 
 exports.formatMessage = formatMessage

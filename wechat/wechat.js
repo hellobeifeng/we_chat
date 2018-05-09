@@ -1,13 +1,15 @@
 'use strict'
 
 var Promise = require('bluebird')
-var request = Promise.promisify(require('request'))
+var request = Promise.promisify(require('request')) // 将原本的request模块到处对象Prmoise化
+var util = require('./util')
 
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
 var api = {
     accessToken: prefix + 'token?grant_type=client_credential'
 }
 
+// 处理票据的对象
 function Wechat(opts) {
     var that = this;
     this.appID = opts.appID
@@ -39,6 +41,7 @@ function Wechat(opts) {
         })
 }
 
+// 判断票据是否失效
 Wechat.prototype.isValidAccessToken = function(data) {
     if (!data || !data.access_token || !data.expires_in) {
         return false
@@ -55,6 +58,7 @@ Wechat.prototype.isValidAccessToken = function(data) {
     }
 } 
 
+// 更新票据信息
 Wechat.prototype.updateAccessToken = function() {
     var appID = this.appID
     var appSecret = this.appSecret
@@ -76,6 +80,20 @@ Wechat.prototype.updateAccessToken = function() {
         })
     })
 
+}
+
+// 用于微信自动回复 TODO　放在这里是否合适
+Wechat.prototype.replay = function() {
+    // 此处的context已经该改变
+    var content = this.body
+    var message = this.weixin
+    console.log('##in replay content', content)
+    console.log('##in replay message', message)
+    var xml = util.tpl(content, message) // 根据上下文拼接回复模板
+
+    this.status = 200
+    this.type = 'application/xml'
+    this.body = xml
 }
 
 module.exports = Wechat
