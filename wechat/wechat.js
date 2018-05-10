@@ -4,9 +4,11 @@ var Promise = require('bluebird')
 var request = Promise.promisify(require('request')) // 将原本的request模块到处对象Prmoise化
 var util = require('./util')
 
+// 微信公众号接口前缀
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
+// 微信公众号接口后缀
 var api = {
-    accessToken: prefix + 'token?grant_type=client_credential'
+    accessToken: prefix + 'token?grant_type=client_credential'// 获取票据接口后缀  https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
 }
 
 // 处理票据的对象
@@ -21,19 +23,20 @@ function Wechat(opts) {
         .then(function(data) {
    
             try {
-                data = JSON.parse(data) // 解析票据信息字符串为JSON对象
+                data = JSON.parse(data) // 解析文件中获取的票据信息字符串为JSON对象 TODO　空内容会不会进入catch?
             } catch(e) {
-                return that.updateAccessToken() // 如果出错（比如没有数据），则更新票据信息
+                return that.updateAccessToken() // 如果出错（比如没有票据数据），则更新票据信息（请求票据接口）
             }
 
             if (that.isValidAccessToken(data)) { // 解析了票据对象，判断数据是否有效（比如票据没有失效）
                 return Promise.resolve(data) // 判断完毕，向下传递
             } else {
-                return that.updateAccessToken() // 票据失效，则重新更新
+                return that.updateAccessToken() // 票据失效，则重新更新 TODO update后并没有验证票据信息的有效性
             }
 
         })
         .then(function(data) {
+            // TODO　这两行干掉
             that.access_token = data.access_token
             that.expires_in = data.expires_in
 
@@ -72,17 +75,15 @@ Wechat.prototype.updateAccessToken = function() {
         .then(function(response) {
             var data = response[1]
             var now = (new Date().getTime())
-            // 设置票据有效期（注意缩短了20s，为了排除网络延迟，程序延迟等影响因素）
-            var expires_in = now + (data.expires_in - 20) * 1000
-    
-            data.expires_in = expires_in
+            // 设置票据失效时间（注意缩短了20s，为了排除网络延迟，程序延迟等影响因素）
+            data.expires_in = now + (data.expires_in - 20) * 1000
             resolve(data)
         })
     })
 
 }
 
-// 用于微信自动回复 TODO　放在这里是否合适
+// 干嘛的
 Wechat.prototype.replay = function() {
     // 此处的context已经该改变
     var content = this.body

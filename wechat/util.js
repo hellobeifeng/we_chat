@@ -6,8 +6,9 @@ var Promise = require('bluebird')
 var tpl = require('./tpl')
 
 /**
- * 将XML格式的数据转换成json格式，返回Promise
+ * 将XML格式的数据转换成json格式，返回Promise TODO 考虑放到全局 util 里
  * @param {String} xml 要解析的XML数据
+ * @returns {??} TODO 返回啥类型的数据
  */
 exports.parseXMLAsync = function(xml) {
     return new Promise(function(resolve, reject) {
@@ -29,7 +30,7 @@ exports.parseXMLAsync = function(xml) {
         Event: [ 'subscribe' ],
         EventKey: [ '' ] 
     }
- * @param {Obejct} result 格式化好的对象 TODO 弄个例子出来
+ * @param {Obejct} result 格式化好的对象 TODO 弄个例子出来 然后考虑放到全局util里
  */
 function formatMessage(result) {
     var message = {}
@@ -67,13 +68,21 @@ function formatMessage(result) {
     return message
 }
 
+exports.formatMessage = formatMessage
+
+
+/**
+ * 用来回复消息
+ * @param {Object} content TODO 啥玩意
+ * @param {*} message 
+ */
 exports.tpl = function(content, message) {
     var info = {}
     var type = 'text'
     var fromUserName = message.FromUserName
     var toUserName = message.ToUserName
   
-    if (Array.isArray(content)) {
+    if (Array.isArray(content)) { // TODO 这个判断有啥用的呢
       type = 'news'
     }
   
@@ -88,7 +97,7 @@ exports.tpl = function(content, message) {
     info.toUserName = fromUserName
     info.fromUserName = toUserName
   
+    // 根据参数拼接 微信要求的 返回给用户的 xml模板
     return tpl.compiled(info)
   }
 
-exports.formatMessage = formatMessage

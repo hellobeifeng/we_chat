@@ -4,7 +4,7 @@ var ejs = require('ejs')
 var heredoc = require('heredoc')
 
 // 消息响应模块
-// 用户回复针对不同消息类型的消息模板
+// 用户回复针对不同消息类型的消息模板（上一步程序根据用户请求类型已经准备好了要自动回复的消息对象）
 var tpl = heredoc(function() { /*
   <xml>
   <ToUserName><![CDATA[<%= toUserName %>]]></ToUserName>
@@ -51,9 +51,10 @@ var tpl = heredoc(function() { /*
   </xml>
 */})
 
+// 使用 ejs 编译模板
 var compiled = ejs.compile(tpl)
 
 exports = module.exports = {
     compiled: compiled
-  }
+}
   

@@ -12,6 +12,7 @@ var config = {
         appID: 'wx10b39772c635be3c',
         appSecret: 'ae405c48477703f6f59c62f02a000b7b',
         token: 'hellobeifeng',
+        // TODO 迁移到 wechat 对象上 和 update 等方法保存在一起
         getAccessToken: function() {
             return util.readFileAsync(wechat_file)
         },
