@@ -6,13 +6,14 @@ var wechat_util = require('./util')
 var path = require('path')
 var util = require('../libs/util')
 var access_token_file = path.join(__dirname, './config/access_token.txt') // 使用txt的方式，存放全局唯一微信票据信息
-
+var fs = require('fs')
 
 // 微信公众号接口前缀
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
 // 微信公众号接口后缀
 var api = {
-    accessToken: prefix + 'token?grant_type=client_credential'// 获取票据接口后缀  https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
+    accessToken: prefix + 'token?grant_type=client_credential', // 获取票据接口后缀  https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140183
+    upload: prefix + 'media/upload?'
 }
 
 // 处理票据的对象
@@ -20,6 +21,18 @@ function Wechat(opts) {
     var that = this;
     this.appID = opts.appID
     this.appSecret = opts.appSecret
+
+    this.featchAccessToken()
+}
+
+// 封装获取票据数据
+Wechat.prototype.featchAccessToken = function() {
+    var that = this
+    if (this.access_token && this.expires_in) {
+        if (this.isValidAccessToken(this)) {
+            return Promise.resolve(this)
+        }
+    }
 
     this.getAccessToken()   // 从文件中读取票据信息
         .then(function(data) {
@@ -38,11 +51,12 @@ function Wechat(opts) {
 
         })
         .then(function(data) {
-            // TODO　这两行干掉
             that.access_token = data.access_token
             that.expires_in = data.expires_in
 
             that.saveAccessToken(data) // 存储票据信息
+            
+            return Promise.resolve(data)
         })
 }
 
@@ -82,7 +96,6 @@ Wechat.prototype.updateAccessToken = function() {
             resolve(data)
         })
     })
-
 }
 
 // （从文件）获取票据信息
@@ -95,6 +108,37 @@ Wechat.prototype.saveAccessToken = function(data) {
     data = JSON.stringify(data)
     return util.writeFileAsync(access_token_file, data)
 }
+
+// 上传素材文件（临时素材/永久素材 ）
+Wechat.prototype.uploadMaterial = function(type, filepath) {
+    var that = this
+    var form = {
+        media: fs.createReadStream(filepath)
+    }
+    var uploadUrl = api.upload
+  
+    return new Promise(function(resolve, reject) {
+      that
+        .featchAccessToken()
+        .then(function(data) {
+          var url = uploadUrl + 'access_token=' + data.access_token + '&type=' + type
+
+          request({method: 'POST', url: url, formData: form, json: true})
+            .then(function(response) {
+                var _data = response[1]
+    
+                if (_data) {
+                    resolve(_data)
+                } else {
+                    throw new Error('Upload material fails')
+                }
+            })
+            .catch(function(err) {
+                reject(err)
+            })
+        })
+    })
+  }
 
 //　处理用户 返回状态和数据 （注意此函数的 context已经该改变） TODO看看下次能不能把这个该死的函数优化掉
 Wechat.prototype.replay = function() {
