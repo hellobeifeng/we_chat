@@ -1,7 +1,9 @@
 'use strict'
-
+// 分析用户数据，根据事件类型，给出对应反馈内容的中间件
+// 数据源：this.weixin 为前面处理好的用户请求数据
+// 副作用：通过 this.body 将处理好的返回数据，绑定到了this上。注意，此时的this为koa当前请求的this
 exports.reply = function* (next) {
-    var message = this.weixin
+    var message = this.weixin 
 
     if (message.MsgType === 'event') {
         if (message.Event === 'subscribe') {
@@ -11,49 +13,40 @@ exports.reply = function* (next) {
           this.body = ''
         } else if (message.Event === 'LOCATION') {
           this.body = '您上报的位置是： ' + message.Latitude + '/' + message.Longitude + '-' + message.Precision
-        }
-        else if (message.Event === 'SCAN') {
+        }　else if (message.Event === 'SCAN') {
           console.log('关注后扫二维码' + message.EventKey + ' ' + message.Ticket)
     
           this.body = '看到你扫了一下哦'
-        }
-        else if (message.Event === 'VIEW') {
+        }　else if (message.Event === 'VIEW') {
           this.body = '您点击了菜单中的链接 ： ' + message.EventKey
-        }
-        else if (message.Event === 'scancode_push') {
+        }　else if (message.Event === 'scancode_push') {
           console.log(message.ScanCodeInfo.ScanType)
           console.log(message.ScanCodeInfo.ScanResult)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'scancode_waitmsg') {
+        }　else if (message.Event === 'scancode_waitmsg') {
           console.log(message.ScanCodeInfo.ScanType)
           console.log(message.ScanCodeInfo.ScanResult)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'pic_sysphoto') {
+        }　else if (message.Event === 'pic_sysphoto') {
           console.log(message.SendPicsInfo.PicList)
           console.log(message.SendPicsInfo.Count)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'pic_photo_or_album') {
+        }　else if (message.Event === 'pic_photo_or_album') {
           console.log(message.SendPicsInfo.PicList)
           console.log(message.SendPicsInfo.Count)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'pic_weixin') {
+        }　else if (message.Event === 'pic_weixin') {
           console.log(message.SendPicsInfo.PicList)
           console.log(message.SendPicsInfo.Count)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'location_select') {
+        }　else if (message.Event === 'location_select') {
           console.log(message.SendLocationInfo.Location_X)
           console.log(message.SendLocationInfo.Location_Y)
           console.log(message.SendLocationInfo.Scale)
           console.log(message.SendLocationInfo.Label)
           console.log(message.SendLocationInfo.Poiname)
           this.body = '您点击了菜单中 ： ' + message.EventKey
-        }
-        else if (message.Event === 'CLICK') {
+        }　else if (message.Event === 'CLICK') {
           var news = []
     
           if (message.EventKey === 'movie_hot') {
@@ -67,8 +60,7 @@ exports.reply = function* (next) {
                 url: options.baseUrl + '/wechat/jump/' + movie._id
               })
             })
-          }
-          else if (message.EventKey === 'movie_cold') {
+          }　else if (message.EventKey === 'movie_cold') {
             let movies = yield Movie.findHotMovies(1, 10)
     
             movies.forEach(function(movie) {
@@ -79,8 +71,7 @@ exports.reply = function* (next) {
                 url: options.baseUrl + '/wechat/jump/' + movie._id
               })
             })
-          }
-          else if (message.EventKey === 'movie_crime') {
+          }　else if (message.EventKey === 'movie_crime') {
             let cat = yield Movie.findMoviesByCate('犯罪')
     
             cat.movies.forEach(function(movie) {
@@ -91,8 +82,7 @@ exports.reply = function* (next) {
                 url: options.baseUrl + '/wechat/jump/' + movie._id
               })
             })
-          }
-          else if (message.EventKey === 'movie_cartoon') {
+          }　else if (message.EventKey === 'movie_cartoon') {
             let cat = yield Movie.findMoviesByCate('动画')
     
             cat.movies.forEach(function(movie) {
@@ -103,8 +93,7 @@ exports.reply = function* (next) {
                 url: options.baseUrl + '/wechat/jump/' + movie._id
               })
             })
-          }
-          else if (message.EventKey === 'help') {
+          }　else if (message.EventKey === 'help') {
             news = help
           }
     
@@ -116,15 +105,13 @@ exports.reply = function* (next) {
     
         if (content === '1') {
           reply = '天下第一吃大米'
-        }
-        else if (content === '2') {
+        }　else if (content === '2') {
           reply = '天下第二吃豆腐'
-        }
-        else if (content === '3') {
+        }　 else if (content === '3') {
           reply = '天下第三吃仙丹'
-        }
+        }　
         this.body = reply
-    }    
-    yield next  
+    } 
 
+    yield next  
 }

@@ -2,7 +2,11 @@
 
 var Promise = require('bluebird')
 var request = Promise.promisify(require('request')) // 将原本的request模块到处对象Prmoise化
-var util = require('./util')
+var wechat_util = require('./util')
+var path = require('path')
+var util = require('../libs/util')
+var access_token_file = path.join(__dirname, './config/access_token.txt') // 使用txt的方式，存放全局唯一微信票据信息
+
 
 // 微信公众号接口前缀
 var prefix = 'https://api.weixin.qq.com/cgi-bin/'
@@ -16,8 +20,6 @@ function Wechat(opts) {
     var that = this;
     this.appID = opts.appID
     this.appSecret = opts.appSecret
-    this.getAccessToken = opts.getAccessToken
-    this.saveAccessToken = opts.saveAccessToken
 
     this.getAccessToken()   // 从文件中读取票据信息
         .then(function(data) {
@@ -83,18 +85,28 @@ Wechat.prototype.updateAccessToken = function() {
 
 }
 
-// 干嘛的
+// （从文件）获取票据信息
+Wechat.prototype.getAccessToken = function() {
+    return util.readFileAsync(access_token_file)
+}
+
+// 将票据信息保存到文件中
+Wechat.prototype.saveAccessToken = function(data) {
+    data = JSON.stringify(data)
+    return util.writeFileAsync(access_token_file, data)
+}
+
+//　处理用户 返回状态和数据 （注意此函数的 context已经该改变） TODO看看下次能不能把这个该死的函数优化掉
 Wechat.prototype.replay = function() {
-    // 此处的context已经该改变
-    var content = this.body
-    var message = this.weixin
-    console.log('##in replay content', content)
-    console.log('##in replay message', message)
-    var xml = util.tpl(content, message) // 根据上下文拼接回复模板
+
+    var server_send_message = this.body   // 要反馈给用户的内容，比如用户订阅公众号， 服务返回的 “欢迎订阅这个公众号”
+    var user_send_obj = this.weixin // 接受到的用户传送来的数据对象
+
+    var xml = wechat_util.tpl(server_send_message, user_send_obj) // 拼接被动回复xml
 
     this.status = 200
     this.type = 'application/xml'
     this.body = xml
 }
-
+ 
 module.exports = Wechat

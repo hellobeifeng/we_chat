@@ -72,17 +72,17 @@ exports.formatMessage = formatMessage
 
 
 /**
- * 用来回复消息
- * @param {Object} content TODO 啥玩意
- * @param {*} message 
+ * 根据前面逻辑返回要回复用户的结果和用户传过来的对象，调用模板内容，拼接回复用户的xml结构
+ * @param {String/Array} content 要给用户回复的内容
+ * @param {Object} message 用户发过来的请求对象
  */
 exports.tpl = function(content, message) {
     var info = {}
-    var type = 'text'
-    var fromUserName = message.FromUserName
-    var toUserName = message.ToUserName
-  
-    if (Array.isArray(content)) { // TODO 这个判断有啥用的呢
+    var fromUserName = message.FromUserName // 用户openid
+    var toUserName = message.ToUserName     // 公众号id
+
+    var type = 'text'                       // 默认返回类型是 text 类型
+    if (Array.isArray(content)) {           // 如果 content 为数组，则告诉微信，当前返回内容类型为图文消息
       type = 'news'
     }
   
@@ -90,7 +90,7 @@ exports.tpl = function(content, message) {
       content = 'Empty news'
     }
   
-    type = content.type || type
+    type = content.type || type             // TODO 关注一下这个content 支持情况
     info.content = content
     info.createTime = new Date().getTime()
     info.msgType = type
