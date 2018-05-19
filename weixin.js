@@ -194,17 +194,15 @@ exports.reply = function* (next) {
         musicUrl: 'http://mpge.5nd.com/2015/2015-9-12/66325/1.mp3',
         thumbMediaId: data.media_id
       }
-    } else if (content === '8') {
-      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {type: 'image'})
+    } else if (content === '8') { // 上传永久素材
+      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'), {type: 'image'})
 
       reply = {
         type: 'image',
         mediaId: data.media_id
       }
     } else if (content === '9') {
-      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, '../6.mp4'), {type: 'video', description: '{"title": "Really a nice place", "introduction": "Never think it so easy"}'})
-
-      console.log(data)
+      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, './6.mp4'), {type: 'video', description: '{"title": "Really a nice place", "introduction": "Never think it so easy"}'})
 
       reply = {
         type: 'video',
@@ -213,21 +211,23 @@ exports.reply = function* (next) {
         mediaId: data.media_id
       }
     } else if (content === '10') {
-      var picData = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {})
+      // 步骤1 上传永久图片素材 TODO 这个返回内容 TODO 每次都需要先上传在使用吗？可不可以将之前上传的
+      var picData = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'), {}) // 永久素材
 
+      // 步骤2 根据素材id拼接图文素材数组
       var media = {
         articles: [{
-          title: 'tututu4',
+          title: '图文1',
           thumb_media_id: picData.media_id,
-          author: 'Scott',
+          author: 'feng',
           digest: '没有摘要',
-          show_cover_pic: 1,
+          show_cover_pic: 1, //显示封面图
           content: '没有内容',
-          content_source_url: 'https://github.com'
+          content_source_url: 'https://github.com' // 点击跳转连接
         }, {
-          title: 'tututu5',
+          title: '图文2',
           thumb_media_id: picData.media_id,
-          author: 'Scott',
+          author: 'feng',
           digest: '没有摘要',
           show_cover_pic: 1,
           content: '没有内容',
@@ -235,13 +235,15 @@ exports.reply = function* (next) {
         }]
       }
 
+      // 步骤3 上传图文素材
       data = yield wechatApi.uploadMaterial('news', media, {})
+      // 步骤4 获取图文素材
       data = yield wechatApi.fetchMaterial(data.media_id, 'news', {})
 
-      console.log(data)
+      console.log('获取到已经上传过的图文数据', data)
 
       var items = data.news_item
-      var news = []
+      var news = [] // 用于回复图文信息
 
       items.forEach(function(item) {
         news.push({
