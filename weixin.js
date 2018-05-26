@@ -283,86 +283,73 @@ exports.reply = function* (next) {
         })
       ]
 
-      console.log(JSON.stringify(results))
-
       reply = JSON.stringify(results)
     }
     else if (content === '12') {
-      // var group = yield wechatApi.createGroup('wechat7')
-
-      // console.log('新分组 wechat7')
+      // var group = yield wechatApi.createGroup('test1')
+      // var group_1 = yield wechatApi.createGroup('test2')
+      // console.log('新分组 test1 test2')
       // console.log(group)
 
       // var groups = yield wechatApi.fetchGroups()
-
-      // console.log('加了 wechat 后的分组列表')
+      // console.log('加了 test1 test2 后的分组列表')
       // console.log(groups)
 
       // var group2 = yield wechatApi.checkGroup(message.FromUserName)
-
-      // console.log('查看自己的分组')
-
+      // console.log('查看自己所在的分组')
       // console.log(group2)
 
-      // var result = yield wechatApi.moveGroup(message.FromUserName, 118)
-      // console.log('移动到  115')
+      // var result = yield wechatApi.moveGroup(message.FromUserName, 101)
+      // console.log('将自己移动到  101')
       // console.log(result)
 
       // var groups2 = yield wechatApi.fetchGroups()
-
       // console.log('移动后的分组列表')
       // console.log(groups2)
 
-      var result2 = yield wechatApi.moveGroup([message.FromUserName], 119)
-      console.log('批量移动到  119')
-      console.log(result2)
+      // var result2 = yield wechatApi.moveGroup([message.FromUserName], 100)
+      // console.log('批量移动到  100')
+      // console.log(result2)
 
-      var groups3 = yield wechatApi.fetchGroups()
+      // var groups3 = yield wechatApi.fetchGroups()
+      // console.log('批量移动后的分组列表')
+      // console.log(groups3)
 
-      console.log('批量移动后的分组列表')
-      console.log(groups3)
-
-      // var result3 = yield wechatApi.updateGroup(117, 'wechat117')
-
-      // console.log('117 wechat2 改名 wechat117')
+      // var result3 = yield wechatApi.updateGroup(101, '12306')
+      // console.log('101 test1 改名 12306')
       // console.log(result3)
 
       // var groups4 = yield wechatApi.fetchGroups()
-
       // console.log('改名后的分组列表')
       // console.log(groups4)
 
       // var result4 = yield wechatApi.deleteGroup(102)
-
-      // console.log('删除 114 tututu 分组')
-
+      // console.log('删除 102  分组')
       // console.log(result4)
 
 
-      // var groups5 = yield wechatApi.fetchGroups()
+      var groups5 = yield wechatApi.fetchGroups()
+      console.log('删除 102 后分组列表')
+      console.log(groups5)
 
-      // console.log('删除 114 后分组列表')
-      // console.log(groups5)
-
-
-      reply = JSON.stringify(groups3)
+      reply = 'done'
+      // reply = JSON.stringify(groups3)
     } else if (content === '13') {
-      var user = yield wechatApi.fetchUsers(message.FromUserName, 'en')
-
+      var user = yield wechatApi.fetchUsers(message.FromUserName)
+      console.log('单独获取')
       console.log(user)
 
-      var openIds = [
-        {
+      // 批量获取
+      var openIds = [{
           openid: message.FromUserName,
           lang: 'en'
-        }
-      ]
-
+      }]
       var users = yield wechatApi.fetchUsers(openIds)
-
+      console.log('批量获取')
       console.log(users)
-
+      
       reply = JSON.stringify(user)
+
     } else if (content === '14') {
       var userlist = yield wechatApi.listUsers()
 
