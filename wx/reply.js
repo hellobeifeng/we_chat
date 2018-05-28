@@ -4,9 +4,17 @@
 // 副作用：通过 this.body 将处理好的返回数据，绑定到了this上。注意，此时的this为koa当前请求的this
 
 var path = require('path')
-var config = require('./config')
-var Wechat = require('./wechat/wechat')
+var config = require('../config')
+var Wechat = require('../wechat/wechat')
+var menu = require('./menu')
+
 var wechatApi = new Wechat(config.wechat)
+
+wechatApi.deleteMenu().then(function() {
+    return wechatApi.createMenu(menu)
+}).then(function(msg) {
+    console.log(msg)
+})
 
 var Movie = {}
 var options = {}
@@ -169,7 +177,7 @@ exports.reply = function* (next) {
         url: 'https://nodejs.org/'
       }]
     } else if (content === '5') { // 回复图片
-      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'))
+      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'))
 
       reply = {
         type: 'image',
@@ -177,7 +185,7 @@ exports.reply = function* (next) {
       }
       console.log(reply)
     } else if (content === '6') { // 回复视频
-      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, './6.mp4'))
+      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, '../6.mp4'))
       reply = {
         type: 'video',
         title: '回复视频内容',
@@ -185,7 +193,7 @@ exports.reply = function* (next) {
         mediaId: data.media_id
       }
     } else if (content === '7') { // 回复音频
-      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'))
+      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'))
 
       reply = {
         type: 'music',
@@ -195,14 +203,14 @@ exports.reply = function* (next) {
         thumbMediaId: data.media_id
       }
     } else if (content === '8') { // 上传永久素材
-      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'), {type: 'image'})
+      var data = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {type: 'image'})
 
       reply = {
         type: 'image',
         mediaId: data.media_id
       }
     } else if (content === '9') {
-      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, './6.mp4'), {type: 'video', description: '{"title": "Really a nice place", "introduction": "Never think it so easy"}'})
+      var data = yield wechatApi.uploadMaterial('video', path.join(__dirname, '../6.mp4'), {type: 'video', description: '{"title": "Really a nice place", "introduction": "Never think it so easy"}'})
 
       reply = {
         type: 'video',
@@ -211,8 +219,8 @@ exports.reply = function* (next) {
         mediaId: data.media_id
       }
     } else if (content === '10') {
-      // 步骤1 上传永久图片素材 TODO 这个返回内容 TODO 每次都需要先上传在使用吗？可不可以将之前上传的
-      var picData = yield wechatApi.uploadMaterial('image', path.join(__dirname, './2.jpg'), {}) // 永久素材
+      // 步骤1 上传永久图片素材
+      var picData = yield wechatApi.uploadMaterial('image', path.join(__dirname, '../2.jpg'), {}) // 永久素材
 
       // 步骤2 根据素材id拼接图文素材数组
       var media = {
@@ -282,8 +290,10 @@ exports.reply = function* (next) {
           count: 10
         })
       ]
-
-      reply = JSON.stringify(results)
+      console.log('统计接过')
+      console.log(JSON.stringify(results))
+      //reply = JSON.stringify(results)
+      reply = '统计结果'
     }
     else if (content === '12') {
       // var group = yield wechatApi.createGroup('test1')
@@ -352,36 +362,39 @@ exports.reply = function* (next) {
 
     } else if (content === '14') {
       var userlist = yield wechatApi.listUsers()
-
+      console.log('关注人的列表如下：')
       console.log(userlist)
 
       reply = userlist.total
     } else if (content === '15') {
-      var mpnews = {
-        media_id: 'tWieFbfwczCt3AbOGNzmVzaEHNVZP2--gHMHZ01IAEo'
-      }
       var text = {
-        'content': 'Hello Wechat'
+        'content': '1111'
       }
 
-      var msgData = yield wechatApi.sendByGroup('text', text, 119)
+      var mpnews = {
+        media_id: 'SKZoBNz_X05MMAW4P3TGJJmMC_FweInBpgKZwYuJCWk'
+      }
+      // 貌似测试订阅号没有权限，报错48008  https://blog.csdn.net/weixin_37281289/article/details/79537499
+      // 只能用指定的openid预览
+      //var msgData = yield wechatApi.previewMass('mpnews', mpnews, 'oF92LxHsR-ml359b5yPGkHS1piIE')
 
+      var msgData = yield wechatApi.sendByGroup('text', text)
+      console.log('15群发消息')
       console.log(msgData)
       reply = 'Yeah!'
     } else if (content === '16') {
+      // 图文消息
       var mpnews = {
-        media_id: 'tWieFbfwczCt3AbOGNzmVzaEHNVZP2--gHMHZ01IAEo'
+        media_id: 'SKZoBNz_X05MMAW4P3TGJJmMC_FweInBpgKZwYuJCWk'
       }
-      // var text = {
-      //   'content': 'Hello Wechat'
-      // }
 
-      var msgData = yield wechatApi.previewMass('mpnews', mpnews, 'okH-duBePdGVlZ3PyqJsVkBeJspw')
+      var msgData = yield wechatApi.previewMass('mpnews', mpnews, 'oF92LxHsR-ml359b5yPGkHS1piIE')
 
       console.log(msgData)
       reply = 'Yeah!'
     } else if (content === '17') {
-      var msgData = yield wechatApi.checkMass('400958630')
+      // 文本消息
+      var msgData = yield wechatApi.checkMass('1000000003')
 
       console.log(msgData)
       reply = 'Yeah hah!'
